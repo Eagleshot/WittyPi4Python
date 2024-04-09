@@ -205,11 +205,11 @@ class WittyPi4:
 
     def apply_schedule(self, max_retries: int = 5) -> str:
         '''Apply schedule to Witty Pi 4'''
-        for _ in range(max_retries):
+        for retry in range(max_retries):
             try:
                 # Apply new schedule
                 command = f"cd {WITTYPI_DIRECTORY} && sudo ./runScript.sh"
-                output = check_output(command, shell=True, executable="/bin/bash", stderr=STDOUT, universal_newlines=True, timeout=10)
+                output = check_output(command, shell=True, executable="/bin/bash", stderr=STDOUT, universal_newlines=True, timeout=15)
                 output = output.split("\n")[1:3]
 
                 if "Schedule next startup at:" in output[1]:
@@ -220,10 +220,12 @@ class WittyPi4:
 
                 logging.warning("Failed to apply schedule: %s", output[0])
                 self.sync_time_with_network()
- 
+
             except Exception as e:
-                logging.error("Failed to apply schedule: %s", str(e))
-                return "-"
+                logging.error("Failed to apply schedule: %s (%s)", str(e), retry)
+
+        # Return error if max retries reached
+        return "-"
 
 if __name__ == "__main__":
 
